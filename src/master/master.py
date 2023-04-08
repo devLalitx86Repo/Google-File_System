@@ -19,6 +19,7 @@ class ChunkServer:
         self.chunkServerIP = chunkServerIP
         self.chunkServerPort = chunkServerPort
         self.isPrimary = isPrimary
+        self.serverLoc = 0
     
     def printInfo(self):
         print("Chunk Handle: ", self.chunkHandle)
