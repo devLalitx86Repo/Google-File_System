@@ -1,19 +1,11 @@
-# Create a class that has information about all the chunks of the file
-class FileDetails:
-    def __init__(self, fileName, offset):
+class Chunk:
+    def __init__(self, fileName):
         self.fileName = fileName
-        self.offset = offset
-        self.chunkSizes = {} # key: Chunk Handle, value: Chunk Useful Size
-        self.chunkCount = 0
-
-    # def findChunkHandle(self, offset):
-    #     # Find the chunk handle for the given offset
-    #     # Return the chunk handle
-    #     for chunkHandle in self.chunkSizes:
-    #         if offset < self.chunkSizes[chunkHandle]:
-    #             return chunkHandle
-    #         offset -= self.chunkSizes[chunkHandle]
-    #     return -1
+        self.handle = 0
+        self.checksum = 0
+        self.chunkServerId = 0
+        self.primaryServerId = 0
+        self.usefulSpace = 0
 
 
 
@@ -44,7 +36,22 @@ class MasterServer:
         self.chunkServer = {} # key: ChunkServer ID, value: ChunkServer IP:Port
         self.isServerAlive = {} # key: ChunkServer ID, value: True/False
         self.ServerCapacity = {} # key: ChunkServer ID, value: Capacity i.e. available space
+        self.fileToChunks = {} # key: File Name, value: List of Chunk Objects Corresponding to file
 
+
+    def addChunk(self, chunkObj):
+        fileName = chunkObj.fileName
+        if(fileName not in self.fileToChunks):
+            self.fileToChunks[fileName] = []
+        self.fileToChunks[fileName].append(chunkObj)
+
+    def findChunkHandle(self,fileName, offset):
+        ChunkLis = self.fileToChunks[fileName]
+        for chunk_obj in ChunkLis:
+            if offset < chunk_obj.usefulSpace:
+                return chunk_obj.handle
+            offset -= chunk_obj.usefulSpace
+        return -1
     
     def DecidePrimaryServer(self, chunkServerIDs):
         # Decide which chunk server to be primary
@@ -88,6 +95,7 @@ class MasterServer:
         print("Chunk Handle: ", self.chunkHandle)
         print("Chunk Server: ", self.chunkServer)
         print("Is Server Alive: ", self.isServerAlive)
+        print("Added Chunks = ", self.fileToChunks)
 
 
 def dummyEnteries(masterServer):
@@ -97,11 +105,40 @@ def dummyEnteries(masterServer):
     masterServer.ServerCapacity = {"1": 100}
 
 
+def dummyChunk(chunkObj):
+    chunkObj.fileName = "abc.txt"
+    chunkObj.handle = "123"
+    chunkObj.checksum = "111"
+    chunkObj.chunkServerId = "1"
+    chunkObj.primaryServerId = "1"
+    chunkObj.usefulSpace = 12
+
+def dummyChunk1(chunkObj):
+    chunkObj.fileName = "abc.txt"
+    chunkObj.handle = "456"
+    chunkObj.checksum = "111"
+    chunkObj.chunkServerId = "1"
+    chunkObj.primaryServerId = "1"
+    chunkObj.usefulSpace = 12
 
 # Create an object of MasterServer class
 masterServer = MasterServer()
 dummyEnteries(masterServer)
-ChunkServerlis = (masterServer.getMetadata("1"))
 
-for CS in ChunkServerlis:
-    CS.printInfo()
+
+chunkObj = Chunk("abc.txt")
+dummyChunk(chunkObj)
+masterServer.addChunk(chunkObj)
+
+chunkObj1 = Chunk("abc.txt")
+dummyChunk(chunkObj1)
+masterServer.addChunk(chunkObj1)
+
+masterServer.printInfo()
+
+
+
+# ChunkServerlis = (masterServer.getMetadata("1"))
+
+# for CS in ChunkServerlis:
+#     CS.printInfo()
