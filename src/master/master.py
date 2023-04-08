@@ -6,6 +6,7 @@ class Chunk:
         self.chunkServerId = 0
         self.primaryServerId = 0
         self.usefulSpace = 0
+        self.expiryTime = 0
 
 
 
