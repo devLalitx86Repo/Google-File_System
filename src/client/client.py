@@ -48,24 +48,30 @@ if __name__ == "__main__":
 
     while True:
         cmd = input().split()
-        if cmd[0] == "read": # read file_name chunk_idx
-            file_name = cmd[1]
-            chunk_idx = cmd[2]
+        try:
+            if cmd[0] == "read": # read file_name chunk_idx
+                file_name = cmd[1]
+                chunk_idx = cmd[2]
 
-            if file_name not in files:
-                new_file = File(file_name)
-                files[file_name] = new_file
-            response = files[file_name].read_chunk(chunk_idx)
-            if response.status == "OK":
-                print(response.data)
-            else:
-                print("Error reading chunk:", response.error)
-        elif cmd[0] == "write": # write file_name chunk_idx local_file_path
-            pass
-        elif cmd[0] == "append": # append file_name local_file_path
-            pass
-        # elif cmd[0] == "create":
-        elif cmd[0] == "delete":
-            pass
-        
+                if file_name not in files:
+                    new_file = File(file_name)
+                    files[file_name] = new_file
+                response = files[file_name].read_chunk(chunk_idx)
+                if response.status == "OK":
+                    print(response.data)
+                else:
+                    print("Error reading chunk:", response.error)
+            elif cmd[0] == "write": # write file_name chunk_idx local_file_path
+                pass
+            elif cmd[0] == "append": # append file_name local_file_path
+                pass
+            elif cmd[0] == "create":
+                pass
+            elif cmd[0] == "delete":
+                pass
+            elif cmd[0] == "setmaster": # setmaster master_url; eg 10.37.155.40:8080
+                MASTER_URL = cmd[1]
+
+        except Exception as e:
+            print("Invalid command")    
             
