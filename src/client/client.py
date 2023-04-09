@@ -1,6 +1,9 @@
 import sys
 import time
+import json
 import requests
+
+MASTER_URL = ""
 
 class File:
     def __init__(self, file_name) -> None:
@@ -12,7 +15,9 @@ class File:
         chunk = self.chunks[chunk_idx] # key error
         if chunk.exp_time > time.time():
             # request Master: (file_name, chunk_idx) --> chunk_md
-            chunk_md = None
+            parameters = {"file_name":file_name, "chunk_idx":chunk_idx}
+            response = requests.get(MASTER_URL, params=parameters)
+            chunk_md = json.load(response.json)
             chunk = Chunk(chunk_md)
             self.chunks[chunk_idx] = chunk
         return chunk
@@ -33,13 +38,34 @@ class Chunk:
     def read(self, byte_range):
         for chunk_server in self.chunk_servers:
             # request chunk_server: (chunk_handle, byte_range) --> (status, data, check_sum)
-            response = None
-            if response.status is "OK":
-                return response.data # Bytes
+            parameters = {"chunk_handle":self.handle,"byte_range":byte_range}
+            response = requests.get(chunk_server.id, params=parameters)
+            return json.load(response)
         return None
     
 if __name__ == "__main__":
     files = dict()
-    file_name = "main.c"
-    files[file_name] = File(file_name)
-    files[file_name].request_md(0)
+
+    while True:
+        cmd = input().split()
+        if cmd[0] == "read": # read file_name chunk_idx
+            file_name = cmd[1]
+            chunk_idx = cmd[2]
+
+            if file_name not in files:
+                new_file = File(file_name)
+                files[file_name] = new_file
+            response = files[file_name].read_chunk(chunk_idx)
+            if response.status == "OK":
+                print(response.data)
+            else:
+                print("Error reading chunk:", response.error)
+        elif cmd[0] == "write": # write file_name chunk_idx local_file_path
+            pass
+        elif cmd[0] == "append": # append file_name local_file_path
+            pass
+        # elif cmd[0] == "create":
+        elif cmd[0] == "delete":
+            pass
+        
+            
