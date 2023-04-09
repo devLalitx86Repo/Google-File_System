@@ -6,7 +6,7 @@ RUN pip install -U pip && pip install -r requirements/common.txt
 COPY ./master_server/api /app/api
 COPY ./master_server/bin /app/bin
 COPY ./models /app/models
-COPY ./utils /app/api/utils
+COPY ./utils /app/utils
 COPY ./master_server/wsgi.py /app/wsgi.py
 COPY ./master_server/config /app/config
 WORKDIR /app
