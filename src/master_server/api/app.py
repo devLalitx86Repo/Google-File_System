@@ -41,7 +41,7 @@ def query_chunk_action():
     payload = request.get_json()
     filename = payload.get("filename")
     chunk_index = payload.get("index")
-    
+        
     if request.method == "GET":
         try:
             chunk = master_server.getChunk(filename,chunk_index)
@@ -58,12 +58,4 @@ def query_chunk_action():
             return jsonify({"chunk_handle": chunk_handle}), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 400
-
-
-    
-
-
-        
-
-
 
