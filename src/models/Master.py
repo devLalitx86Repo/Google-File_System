@@ -8,7 +8,7 @@ class MasterServer:
         self.isServerAlive = {} # key: ChunkServer ID, value: True/False
         self.ServerCapacity = {} # key: ChunkServer ID, value: Capacity i.e. available space
         self.fileToChunks = {} # key: File Name, value: List of Chunk Objects Corresponding to file
-
+        self.chunkHandleToObj = {} # key: Chunk Handle, value: ChunkObject
 
 
     def addChunk(self, chunkObj):
@@ -16,6 +16,7 @@ class MasterServer:
         if(fileName not in self.fileToChunks):
             self.fileToChunks[fileName] = []
         self.fileToChunks[fileName].append(chunkObj)
+        self.chunkHandleToObj[chunkObj.handle] = chunkObj
 
 
     def getChunk(self, fileName, chunkIndex):
@@ -107,3 +108,20 @@ class MasterServer:
     #     print("Chunk Server: ", self.chunkServer)
     #     print("Is Server Alive: ", self.isServerAlive)
     #     print("Added Chunks = ", self.fileToChunks)
+
+
+    # # Methods for Operations
+
+    # def write(self, chunkHandle, byteStart, byteEnd, chunkServerInfo):
+
+    #     for chunkServer in chunkServerInfo:
+    #         chunkServerId = chunkServer["chunkServerId"]
+    #         if chunkServerId not in self.chunkHandle[chunkHandle]:
+    #             self.chunkHandle[chunkHandle].append(chunkServerId)
+    #         chunkServerObj = self.chunk_servers[chunkServerId]
+    #         chunkServerObj.write_update(chunkHandle) # This will update the chunk list of the chunk server
+    #         # To update the start Byte and End Byte of the chunk
+    #         fileName = self.ChunkToFile[chunkHandle]
+    #         chunkObj = 
+
+            

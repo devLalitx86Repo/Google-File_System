@@ -39,8 +39,8 @@ def get_random_id():
 @app.route("/query_chunk", methods=["GET","POST","UPDATE"])
 def query_chunk_action():
     payload = request.get_json()
-    filename = payload.get("filename")
-    chunk_index = payload.get("index")
+    filename = payload.get("file_name")
+    chunk_index = payload.get("chunk_idx")
         
     if request.method == "GET":
         try:
@@ -93,18 +93,7 @@ def ping():
         return jsonify({"error": str(e)}), 400
     
 
-@app.route("/write", methods=["POST"])
-def write():
-    payload = request.get_json()
-    clientIP = payload.get("clientIP")
-    clientPort = payload.get("clientPort")
-    chunkHandle = payload.get("chunkHandle")
-    byteStart = payload.get("byteStart")
-    byteEnd = payload.get("byteEnd")
-    data = payload.get("data")
-    chunkServerInfo = payload.get("chunkServerInfo")
-
-    try:
-        return jsonify({"message": "OK"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    
+@app.route("/ack", methods=["POST"])
+def ack():
+    pass
