@@ -7,7 +7,7 @@ from utils.gen import generate_uuid
 
 
 class Chunk_Server:
-    def __init__(self, ip, port, id=None):
+    def __init__(self, ip, port, id=None, diskAvail=0,loc = 0, chunkList=[]):
         self.id = id
         if id == None:
             self.id = generate_uuid()
@@ -16,8 +16,9 @@ class Chunk_Server:
         self.isAlive = True
         self.masters = ["localhost:5000"]
         self.last_ping = time.time()
-        self.diskAvail = 0
-        self.chunkList = []  # list of chunk handles 
+        self.diskAvail = diskAvail
+        self.loc = loc
+        self.chunkList = chunkList  # list of chunk handles 
 
     def start(self):
         for master in self.masters:
@@ -55,6 +56,9 @@ class Chunk_Server:
         self.isAlive = False
 
     def update_ts(self, timestamp):
+        timestamp = float(timestamp)
+        print("TimeStamp type:", type(timestamp))
+        print("Last Ping Type: ", type(self.last_ping))
         if(self.last_ping < timestamp):
             self.last_ping = timestamp
     
