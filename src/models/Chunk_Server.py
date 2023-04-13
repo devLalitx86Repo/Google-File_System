@@ -32,7 +32,6 @@ class Chunk_Server:
 
     def ping_master(self):
         ping_route = "/ping"
-
         def ping():
             while self.isAlive:
                 for master in self.masters:
