@@ -56,9 +56,9 @@ class Chunk_Server:
         self.isAlive = False
 
     def update_ts(self, timestamp):
-        timestamp = float(timestamp)
-        print("TimeStamp type:", type(timestamp))
-        print("Last Ping Type: ", type(self.last_ping))
+        
+        # print("TimeStamp type:", type(timestamp))
+        # print("Last Ping Type: ", type(self.last_ping))
         if(self.last_ping < timestamp):
             self.last_ping = timestamp
     
