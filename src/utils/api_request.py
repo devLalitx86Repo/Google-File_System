@@ -5,7 +5,7 @@ def get(url: str):
     return response
 
 def post(url: str, data: dict):
-    response = requests.post(url, data=data)
+    response = requests.post(url, json=data)
     return response
 
 def get_dict(url: str):

@@ -34,11 +34,17 @@ def writeChunk():
     #write data 
     resp = WriteChunk().operation(pckt_json)
     if not resp:
-        return {"isSuccessful": False, "checsum" : ""}, HTTP_BAD_REQUEST_STATUS_CODE
+        return {"isSuccessful": False, "checksum" : ""}, HTTP_BAD_REQUEST_STATUS_CODE
 
-    return {"isSuccessful": True, "checsum" : resp}, HTTP_OK_STATUS_CODE
+    return {"isSuccessful": True, "checksum" : resp}, HTTP_OK_STATUS_CODE
 
 
 @write_bp.route('/commit', methods = POST)
 def commitChunk():
-    return {}
+    pckt_json = request.get_json()
+    #commit data
+    resp = WriteChunk().commit(pckt_json)
+    if not resp:
+        return {"isSuccessful": False, "checksum" : ""}, HTTP_BAD_REQUEST_STATUS_CODE
+    
+    return {"isSuccessful": True, "checksum" : resp}, HTTP_OK_STATUS_CODE
