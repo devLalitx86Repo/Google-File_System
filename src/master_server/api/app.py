@@ -81,10 +81,13 @@ def ping():
     timestamp = payload.get("timestamp")
     diskAvail = payload.get("diskAvail")
     chunkInfo_lis = payload.get("chunkInfo")
+
     try:
         master_server.update_ts(id,timestamp)
         master_server.update_diskAvail(id,diskAvail)
-        
+        status = master_server.update_chunkInfo(id,chunkInfo_lis)
+        if status == "ERROR":
+            return jsonify({"message": "Bad Request ChunkInfo Mismatched"}), 400
         return jsonify({"message": "OK"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400

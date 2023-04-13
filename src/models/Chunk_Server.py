@@ -17,6 +17,7 @@ class Chunk_Server:
         self.masters = ["localhost:5000"]
         self.last_ping = time.time()
         self.diskAvail = 0
+        self.chunkList = []  # list of chunk handles 
 
     def start(self):
         for master in self.masters:

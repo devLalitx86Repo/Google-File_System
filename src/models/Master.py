@@ -41,6 +41,19 @@ class MasterServer:
         self.chunk_servers[chunk_server.id].isAlive = False
     
     
+    def update_chunkInfo(self, chunkServerID, chunkInfo_lis):
+        chunkServerObj = self.chunk_servers[chunkServerID]
+        CS_ChunkList = []
+        for chunkInfo in chunkInfo_lis:
+            chunkHandle = chunkInfo["chunkHandle"]
+            CS_ChunkList.append(chunkHandle)
+        CS_ChunkList.sort()
+        chunkServerObj.chunkList.sort()
+        if(CS_ChunkList==chunkServerObj.chunkList):
+            return "OK"
+        else:
+            return "ERROR"
+            
 
 
     # def findChunkHandle(self,fileName, offset):
