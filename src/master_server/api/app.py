@@ -77,10 +77,14 @@ def get_chunk_servers():
 @app.route("/ping", methods=["POST"])
 def ping():
     payload = request.get_json()
-    id = payload.get("id")
+    id = payload.get("chunkServerId")
     timestamp = payload.get("timestamp")
+    diskAvail = payload.get("diskAvail")
+    chunkInfo_lis = payload.get("chunkInfo")
     try:
         master_server.update_ts(id,timestamp)
+        master_server.update_diskAvail(id,diskAvail)
+        
         return jsonify({"message": "OK"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400

@@ -16,6 +16,7 @@ class Chunk_Server:
         self.isAlive = True
         self.masters = ["localhost:5000"]
         self.last_ping = time.time()
+        self.diskAvail = 0
 
     def start(self):
         for master in self.masters:
@@ -53,7 +54,12 @@ class Chunk_Server:
         self.isAlive = False
 
     def update_ts(self, timestamp):
-        self.last_ping = timestamp
+        if(self.last_ping < timestamp):
+            self.last_ping = timestamp
+    
+    def update_diskAvail(self, diskAvail):
+        self.diskAvail = diskAvail
+        
 
     def __dict__(self):
-        return {"id": self.id, "ip": self.ip, "port": self.port, "isAlive": self.isAlive, "last_ping": self.last_ping}
+        return {"id": self.id, "ip": self.ip, "port": self.port, "isAlive": self.isAlive, "last_ping": self.last_ping, "Avail Space":self.diskAvail}
