@@ -7,6 +7,10 @@ class ChunkMetaInfo:
         self.isPrimary = False
         self.leaseTimestamp = None
 
+    def setPrimary(self, leaseTimestamp=time.time()):
+        self.isPrimary = True
+        self.leaseTimestamp = leaseTimestamp
+
     def getLeaseSpanDuration(self) -> float:
         if self.isPrimary:
             return time.time()
@@ -22,3 +26,12 @@ class ChunkMetaInfo:
     
     def __str__(self) -> str:
         return self.getChunkInfo()
+    
+class chunkTempInfo:
+    def __init__(self, chunkData, byteStart, byteEnd, timestamp=time.time()):
+        self.chunkData = chunkData
+        self.byteStart = byteStart
+        self.byteEnd = byteEnd
+        self.timestamp = timestamp
+    def stillValid(self):
+        return time.time() - self.timestamp < 60

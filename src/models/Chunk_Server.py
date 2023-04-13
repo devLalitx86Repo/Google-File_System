@@ -3,14 +3,14 @@ from threading import Thread
 import time
 
 # local imports
-from utils.gen import generate_uuid
+# from utils.gen import generate_uuid
 
 
 class Chunk_Server:
     def __init__(self, ip, port, loc_id, diskAvail, id=None):
         self.id = id
-        if id == None:
-            self.id = generate_uuid()
+        # if id == None:
+        #     self.id = generate_uuid()
         self.ip = ip
         self.port = port
         self.isAlive = True
