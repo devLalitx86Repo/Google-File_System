@@ -140,4 +140,28 @@ if __name__ == "__main__":
 
         except Exception as e:
             print("Invalid command")    
-            
+
+
+# if __name__ == "__main__":
+#     files = dict()
+
+#     if sys.argv[1] == "read":
+#         file_name = sys.argv[2]
+#         chunk_idx = sys.argv[3] 
+#         read_handler(file_name, chunk_idx)
+    
+#     elif sys.argv[1] == "write":
+#         pass
+    
+#     elif sys.argv[1] == "append":
+#         file_name = sys.argv[2]
+#         file_path = sys.argv[3] 
+#         append_handler(file_name, file_path)
+    
+#     elif sys.argv[1] == "create":
+#         pass
+
+#     elif sys.argv[1] == "delete":
+#         pass
+
+    
