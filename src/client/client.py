@@ -138,6 +138,9 @@ if __name__ == "__main__":
             elif cmd[0] == "setmaster": # setmaster master_url; eg 10.37.155.40:8080
                 MASTER_URL = cmd[1]
 
+            elif cmd[0] == "exit":
+                break
+
         except Exception as e:
             print("Invalid command")    
 
