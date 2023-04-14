@@ -1,0 +1,4 @@
+
+
+CHUNK_SERVER_WRITE = '/write/'
+CHUNK_SERVER_READ = '/read/'

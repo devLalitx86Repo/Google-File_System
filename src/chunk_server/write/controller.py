@@ -13,7 +13,6 @@ class WriteChunk:
     def __init__(self):
         pass
 
-
     def operation(self, pkt_json):
         try:
             other_chunk_server_info = None
