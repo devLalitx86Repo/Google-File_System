@@ -35,6 +35,7 @@ class Chunk_Server:
             "chunkServerId" : self.id,
             "isAlive" : self.isAlive,
             "diskAvail" : self.diskAvail,
+            "timestamp" : time.time(),
             # "chunkInfo" : self.availableChunks
         }
 

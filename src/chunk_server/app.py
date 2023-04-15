@@ -1,7 +1,11 @@
 from driver import app
 from chunk_server.util.constants import IP, PORT
-from util.general import update_chunks_list
+from util.yen import StartServer
 
 if __name__ == '__main__':
-    update_chunks_list()
-    app.run(host=IP, port=PORT, debug=True, threaded=True)
+    # if StartServer().up():
+    #     print('Successful Start')
+    #     app.run(host=IP, port=PORT, debug=False, threaded=True)
+    # else:
+    #     print('unable to start')
+    app.run(host=IP, port=PORT, debug=False, threaded=True)
