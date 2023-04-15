@@ -47,7 +47,9 @@ class Heartbeat(threading.Thread):
 
     def collectInfo(self):
         data = chunk_server.getPingInfo()
-        data['chunkInfo'] = [obj.getChunkInfo() for obj in list_of_chunks.values()]
+        all_chunks = list(list_of_chunks.values())
+        data['chunkInfo'] = [obj.getChunkInfo() for obj in all_chunks]
+        del all_chunks
         return data
 
     def sendInfo(self, data):
