@@ -1,15 +1,20 @@
 import time
+from utils.constants import CHUNK_SIZE
 
 class ChunkMetaInfo:
-    def __init__(self, chunkHandle, checksum):
+    def __init__(self, chunkHandle, checksum, dataSize=0):
         self.chunkHandle = chunkHandle
         self.checksum = checksum
+        self.dataSize = dataSize
         self.isPrimary = False
         self.leaseTimestamp = None
 
     def setPrimary(self, leaseTimestamp=time.time()):
         self.isPrimary = True
         self.leaseTimestamp = leaseTimestamp
+
+    def getRemainingSize(self):
+        return CHUNK_SIZE - self.dataSize
 
     def getLeaseSpanDuration(self) -> float:
         if self.isPrimary:

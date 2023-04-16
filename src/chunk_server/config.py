@@ -5,6 +5,8 @@ list_of_chunks = {}
 
 temporary_chunks = {}
 
+temporary_append_chunks = {}
+
 chunk_server = Chunk_Server(
     ip=IP,
     port=PORT,

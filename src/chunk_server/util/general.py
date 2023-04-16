@@ -15,4 +15,5 @@ def update_chunks_list():
         with open(filepath, 'r') as f:
             data = f.read()
             checksum = generate_checksum(data)
-        list_of_chunks[chunk] = ChunkMetaInfo(chunk, checksum)
+            size = len(data)
+        list_of_chunks[chunk] = ChunkMetaInfo(chunk, checksum, size)

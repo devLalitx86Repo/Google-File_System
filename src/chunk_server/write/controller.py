@@ -7,6 +7,7 @@ from utils.checksum import generate_checksum, validate_checksum
 from utils.api_request import post_dict
 from utils.gen import make_url
 import traceback
+from utils.constants import CHUNK_SIZE
 
 
 class WriteChunk:
@@ -83,6 +84,7 @@ class WriteChunk:
             proper_url = make_url(info['ipAddress'], info['port']) + '/write/'
             res = self.sendDataForReplication(proper_url, pkt_json)
             if not res:
+                print('Failure to send data')
                 return None
             replication_factor += 1
 
@@ -100,10 +102,15 @@ class WriteChunk:
             if res:
                 checks.append(res)
                 mk_rf += 1
+            else:
+                break
 
         if mk_rf != replication_factor:
             #uncommit all
-            pass
+            # self.uncommit()
+
+            print('failure to commit on replicate chunk servers')
+            return None
         
         checksum_gen = generate_checksum(pkt_json['data'])
         for check in checks:
@@ -114,9 +121,9 @@ class WriteChunk:
         return res
 
 
-    def updateChunkList(self, handle, data):
+    def updateChunkList(self, handle, data, size):
         checksum = generate_checksum(data)
-        obj = ChunkMetaInfo(handle, checksum)
+        obj = ChunkMetaInfo(handle, checksum, size)
         list_of_chunks[handle] = obj
         return checksum
 
@@ -127,12 +134,18 @@ class WriteChunk:
                 pass
             
         file_size = os.path.getsize(file_path)
-        if(byte_start < 0 or byte_start > file_size or (byte_start != 0 and file_size < byte_end) or  byte_end <= 0 or len(file_data) != byte_end - byte_start + 1):
+        if(byte_start < 0 or byte_start > CHUNK_SIZE or byte_end > CHUNK_SIZE or byte_end <= 0 or len(file_data) != byte_end - byte_start + 1):
+            print('fail here')
             return None
         with open(file_path, 'r+') as tmp:
             tmp.seek(byte_start)
             tmp.write(file_data)
 
-        checksum = self.updateChunkList(handle, file_data)
+
+        file_size = os.path.getsize(file_path)
+        with open(file_path, 'r') as f:
+            full_file_data = f.read()
+        checksum = generate_checksum(file_data)
+        self.updateChunkList(handle, full_file_data, file_size)
 
         return checksum
