@@ -9,6 +9,7 @@ from models.Master import MasterServer
 from models.Chunk import Chunk
 from models.Chunk_Server import Chunk_Server
 from utils.gen import generate_uuid
+from utils.log import logFun
 
 app = Flask(__name__)
 app.register_blueprint(errors)
@@ -18,6 +19,7 @@ Crash_Routine(master_server)
 
 @app.route("/")
 def index():
+    logFun("Hello, Welcome to GFS Application!")
     return Response("Hello, Welcome to GFS Application!", status=200)
 
 @app.route("/custom", methods=["POST"])
