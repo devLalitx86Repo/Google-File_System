@@ -1,0 +1,7 @@
+
+CHUNK_SERVER_INITIATE = '/initiate'
+CHUNK_SERVER_PING = '/ping'
+CHUNK_SERVER_WRITE = '/write/'
+CHUNK_SERVER_COMMIT = '/write/commit'
+CHUNK_SERVER_APPEND = '/append/'
+CHUNK_SERVER_READ = '/read/'
