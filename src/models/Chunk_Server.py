@@ -25,7 +25,7 @@ class Chunk_Server:
             "chunkServerId" : self.id,
             "ipAdress" : self.ip,
             "port" : self.port,
-            "chunkLocationId": self.location_id,
+            "chunkLocationId": self.loc,
             "diskAvail" : self.diskAvail,
         }
     
