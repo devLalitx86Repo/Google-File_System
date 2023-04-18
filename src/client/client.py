@@ -10,16 +10,19 @@ class File:
         self.chunks = dict()
         self.file_name = file_name
         self.size = 0
+        self.last_chunk_id = 0
     
     def request_md(self, chunk_idx):
-        chunk = self.chunks[chunk_idx] # key error
-        if chunk.exp_time > time.time():
+        if chunk_idx not in self.chunks or chunk.exp_time > time.time():
             # request Master: (file_name, chunk_idx) --> chunk_md
             body = {"file_name":file_name, "chunk_idx":chunk_idx}
             response = requests.get(MASTER_URL + "/query_chunk", json=body)
-            chunk_md = json.load(response.json)
-            chunk = Chunk(chunk_md)
-            self.chunks[chunk_idx] = chunk
+            if response.status_code == 200:
+                chunk_md = json.load(response.json)
+                chunk = Chunk(chunk_md)
+                self.chunks[chunk_idx] = chunk
+                self.last_chunk_id = max(self.last_chunk_id, chunk_idx)
+        else : chunk = self.chunks[chunk_idx] # key error
         return chunk
     
     def read_chunk(self, chunk_idx):
@@ -28,10 +31,10 @@ class File:
     
     def append_chunk(self, data):
         chunk = self.request_md(-1) # -1 denotes last chunk
-        return chunk.append()
+        return chunk.append(data)
     
     def create_new_chunk(self):
-        body = {"file_name":file_name}
+        body = {"file_name":file_name, "chunk_idx":self.last_chunk_id + 1}
         response = requests.post(MASTER_URL + "/query_chunk", json=body)
         if response.status == 200:
             pass
@@ -105,7 +108,7 @@ def append_handler(file_name, file_path):
         else:
             print("Error appending data:", response.error)
             files[file_name].create_new_chunk()
-            print("waiting for 3 seconds...")
+            print("waiting for 5 seconds...")
             time.sleep(5)
 
     print("Cannot append, try again later.")
