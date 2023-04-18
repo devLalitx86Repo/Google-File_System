@@ -9,9 +9,19 @@ def post(url: str, data: dict):
     return response
 
 def get_dict(url: str):
-    resp = get(url)
-    return resp.json(), resp.status_code
+    try:
+        resp = get(url)
+        return resp.json(), resp.status_code
+    except Exception as e:
+        print('error while get api call')
+        print(e)
+    return None, None
 
 def post_dict(url: str, data: dict):
-    resp = post(url, data)
-    return resp.json(), resp.status_code
+    try:
+        resp = post(url, data)
+        return resp.json(), resp.status_code
+    except Exception as e:
+        print('error while post api call')    
+        print(e)
+    return None, None

@@ -48,3 +48,33 @@ def commitChunk():
         return {"isSuccessful": False, "checksum" : ""}, HTTP_BAD_REQUEST_STATUS_CODE
     
     return {"isSuccessful": True, "checksum" : resp}, HTTP_OK_STATUS_CODE
+
+
+
+'''
+{
+    "chunkHandle" : "323",
+    "chunkServerInfo" : [
+        {
+            "chunkServerId" : "323 ",
+            "ipAddress" : " ",
+            "port" : 2323,
+        },
+        {
+            "chunkServerId" : "999 ",
+            "ipAddress" : " ",
+            "port" : 2321,
+        }
+    ]
+
+}
+
+'''
+
+@write_bp.route('/replicate', methods=POST)
+def replicateChunk():
+    json_pkt = request.get_json()
+    resp = WriteChunk().makingReplication(json_pkt)
+    if resp == 'success':
+        return {"isSuccessful": True, "message" : resp}, HTTP_OK_STATUS_CODE
+    return {"isSuccessful" : False, "message" : resp}, HTTP_BAD_REQUEST_STATUS_CODE

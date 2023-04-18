@@ -44,3 +44,17 @@ class ReadChunk:
             data = f.read(totalBytes)
         
         return data
+    
+    def complete(self, json_pkt):
+        try:
+            handle = json_pkt['chunkHandle']
+            if handle not in list_of_chunks:
+                return None
+            json_pkt['totalBytes'] = list_of_chunks[handle].dataSize
+            json_pkt['byteOffset'] = 0
+
+            return self.operation(json_pkt)
+
+        except Exception as e:
+            print('error while reading complete chunk')
+            print(e)

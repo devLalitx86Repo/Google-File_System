@@ -21,3 +21,11 @@ def readChunk():
         return {'isSuccessfull': False}, HTTP_BAD_REQUEST_STATUS_CODE
     
     return {'isSuccessfull': True, **resp}, HTTP_OK_STATUS_CODE
+
+@read_bp.route('/complete', methods=POST)
+def readingCompleteChunk():
+    json_pkt = request.get_json()
+    resp = ReadChunk().complete(json_pkt)
+    if not resp:
+        return {'isSuccessfull' : False}, HTTP_BAD_REQUEST_STATUS_CODE
+    return {'isSuccessfull' : True, **resp}, HTTP_OK_STATUS_CODE

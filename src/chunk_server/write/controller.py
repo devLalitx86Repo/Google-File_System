@@ -8,7 +8,7 @@ from utils.api_request import post_dict
 from utils.gen import make_url
 import traceback
 from utils.constants import CHUNK_SIZE
-
+from utils.constant_routes import CHUNK_SERVER_WRITE, CHUNK_SERVER_COMMIT, CHUNK_SERVER_COMPLETE_READ
 
 class WriteChunk:
     def __init__(self):
@@ -81,7 +81,7 @@ class WriteChunk:
             if info['chunkServerId'] == CHUNK_SERVER_ID:
                 continue
 
-            proper_url = make_url(info['ipAddress'], info['port']) + '/write/'
+            proper_url = make_url(info['ipAddress'], info['port']) + CHUNK_SERVER_WRITE
             res = self.sendDataForReplication(proper_url, pkt_json)
             if not res:
                 print('Failure to send data')
@@ -95,7 +95,7 @@ class WriteChunk:
             if info['chunkServerId'] == CHUNK_SERVER_ID:
                 continue
 
-            proper_url = make_url(info['ipAddress'], info['port']) + '/write/commit'
+            proper_url = make_url(info['ipAddress'], info['port']) + CHUNK_SERVER_COMMIT
             res = self.sendCommitRequest(proper_url, {'chunkHandle' : pkt_json['chunkHandle']})
             # if not res:
             #     return None
@@ -149,3 +149,37 @@ class WriteChunk:
         self.updateChunkList(handle, full_file_data, file_size)
 
         return checksum
+    
+    def makingReplication(self, json_pkt):
+        try:
+            handle = json_pkt['chunkHandle']
+            if handle in list_of_chunks:
+                print('already present')
+                return "already present"
+                # return None
+            
+            data = None
+            chunk_server_list = json_pkt['chunkServerInfo']
+            for obj in chunk_server_list:
+                full_url = make_url(obj['ipAddress'], obj['port']) + CHUNK_SERVER_COMPLETE_READ
+                resp_pkt, status = post_dict(full_url, {'chunkHandle':handle})
+                if status == HTTP_OK_STATUS_CODE:
+                    data = resp_pkt
+                    break
+            
+            if not data:
+                print("couldn't access chunkservers")
+                return "couldn't access chunkservers"
+                # return None
+            
+            checksum = self.writeIntoDisk(handle, 0, len(data['data'])-1, data['data'])
+
+            if checksum != data['checksum']:
+                print('checksum not matched while making replication')
+                return 'checksum not matched while making replication'
+
+            return "success"
+            
+        except Exception as e:
+            print('error while making replication')
+            print(e)
