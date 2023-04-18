@@ -16,7 +16,7 @@ class Chunk_Server:
         self.isAlive = True
         self.masters = ["localhost:5000"]
         self.last_ping = time.time()
-        self.location_id = loc_id
+        self.loc = loc_id
         self.totalDisk = diskAvail
         self.diskAvail = diskAvail
         # self.availableChunks = []
@@ -26,7 +26,7 @@ class Chunk_Server:
             "chunkServerId" : self.id,
             "ipAdress" : self.ip,
             "port" : self.port,
-            "chunkLocationId": self.location_id,
+            "chunkLocationId": self.loc,
             "diskAvail" : self.diskAvail,
         }
     
