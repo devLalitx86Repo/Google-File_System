@@ -10,7 +10,7 @@ temporary_append_chunks = {}
 chunk_server = Chunk_Server(
     ip=IP,
     port=PORT,
-    loc_id=CHUNK_SERVER_LOCATION_ID,
+    loc=CHUNK_SERVER_LOCATION_ID,
     diskAvail=DISK_AVAIL_GB,
     id=CHUNK_SERVER_ID
 )

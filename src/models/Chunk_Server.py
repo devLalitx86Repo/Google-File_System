@@ -7,7 +7,7 @@ import time
 
 
 class Chunk_Server:
-    def __init__(self, ip, port, loc_id, diskAvail, id=None):
+    def __init__(self, ip, port, id=None, diskAvail=0,loc = 0, chunkList=[]):
         self.id = id
         # if id == None:
         #     self.id = generate_uuid()
@@ -16,10 +16,9 @@ class Chunk_Server:
         self.isAlive = True
         self.masters = ["localhost:5000"]
         self.last_ping = time.time()
-        self.loc = loc_id
-        self.totalDisk = diskAvail
         self.diskAvail = diskAvail
-        # self.availableChunks = []
+        self.loc = loc
+        self.chunkList = chunkList  # list of chunk handles 
 
     def getInitInfo(self):
         return {
@@ -79,9 +78,16 @@ class Chunk_Server:
         return self.isAlive
 
     def update_ts(self, timestamp):
-        self.last_ping = timestamp
+        
+        # print("TimeStamp type:", type(timestamp))
+        # print("Last Ping Type: ", type(self.last_ping))
+        if(self.last_ping < timestamp):
+            self.last_ping = timestamp
+    
+    def update_diskAvail(self, diskAvail):
+        self.diskAvail = diskAvail
+        
 
     def __dict__(self):
-        return {"id": self.id, "ip": self.ip, "port": self.port, "isAlive": self.isAlive, "last_ping": self.last_ping}
-
+        return {"id": self.id, "ip": self.ip, "port": self.port, "isAlive": self.isAlive, "last_ping": self.last_ping, "Avail Space":self.diskAvail}
 
