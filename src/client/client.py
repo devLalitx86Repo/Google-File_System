@@ -3,6 +3,12 @@ import time
 import json
 import requests
 
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils.api_request import post_dict
+from utils.gen import make_url
+
 MASTER_URL = ""
 
 class File:
@@ -53,17 +59,17 @@ class Chunk:
             # request chunk_server: (chunk_handle, byte_range) --> (status, data, check_sum)
             # parameters = {"chunk_handle":self.handle,"byte_range":byte_range}
             body = {
-                "clientIP" : "localhost",
-                "clientPort" : 6969,
                 "chunkHandle" : self.handle,
-                "byteStart" : byte_range[0],
-                "byteEnd" : byte_range[1],
-                "data" : "hain?",
-                "chunkServerInfo" : self.chunk_servers
+                "byteOffset " : byte_range[0],
+                "totalBytes" : byte_range[1],
             }
 
-            response = requests.post(chunk_server.id, json=body)
-            return json.load(response)
+            chunk_server_url = make_url(chunk_server["ip"],chunk_server["port"])
+            response = requests.post(chunk_server_url, json=body)
+            if response.status_code == 200:
+                return json.load(response.json)
+            else:
+                print("Response ", response.json)
         return None
     
     def append(self, data):
@@ -77,8 +83,26 @@ class Chunk:
             "chunkServerInfo" : self.chunk_servers
         }
 
-        response = requests.post(self.chunk_servers[self.primary_server].id, json=body)
-        return json.load(response)
+        chunk_server_url = make_url(self.chunk_servers[self.primary_server]["ip"],self.chunk_servers[self.primary_server]["port"])
+        response = requests.post(chunk_server_url, json=body)
+        if response.status_code == 200:
+            return json.load(response.json)
+        else:
+            print("Response ", response.json)
+
+    def write(self, data, byteStart, byteEnd):
+        body = {
+            "clientIP" : "localhost",
+            "clientPort" : 6969,
+            "chunkHandle" : self.handle,
+            "byteStart" : byteStart,
+            "byteEnd" : byteEnd,
+            "data" : data,
+            "chunkServerInfo" : self.chunk_servers
+        }
+
+        chunk_server_url = make_url(self.chunk_servers[self.primary_server]["ip"],self.chunk_servers[self.primary_server]["port"])
+        post_dict(chunk_server_url, body)
 
 def read_handler(file_name, chunk_idx):
     if file_name not in files:
@@ -88,9 +112,9 @@ def read_handler(file_name, chunk_idx):
     response = files[file_name].read_chunk(chunk_idx)
     
     if response.status == 200:
-        print(response.data)
+        print(response)
     else:
-        print("Error reading chunk:", response.error)
+        print("Error reading chunk:", response)
 
 def append_handler(file_name, file_path):
     with open(file_path, "rb") as f:
@@ -101,17 +125,37 @@ def append_handler(file_name, file_path):
         files[file_name] = new_file
 
     for attepmts in range(3):
-        response = files[file_name].append(file_data)
-        if response.status == 200:
-            print(response.data)
+        response = files[file_name].append_chunk(file_data)
+        if response.status_code == 200:
+            print(response)
             return
         else:
-            print("Error appending data:", response.error)
+            print("Error appending data:", response)
             files[file_name].create_new_chunk()
             print("waiting for 5 seconds...")
             time.sleep(5)
 
     print("Cannot append, try again later.")
+
+def write_handler(file_name, file_path):
+    with open(file_path, "rb") as f:
+        file_data = f.read()
+    
+    if file_name not in files:
+        new_file = File(file_name)
+        files[file_name] = new_file
+
+    for attepmts in range(3):
+        response = files[file_name].write_chunk(file_data)
+        if response.status_code == 200:
+            print(response)
+            return
+        else:
+            print("Error writing data:", response)
+            # print("waiting for 5 seconds...")
+            # time.sleep(5)
+
+    print("Cannot write, try again later.")
 
 if __name__ == "__main__":
     files = dict()
