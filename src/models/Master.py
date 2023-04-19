@@ -9,6 +9,7 @@ class MasterServer:
         self.ServerCapacity = {} # key: ChunkServer ID, value: Capacity i.e. available space
         self.fileToChunks = {} # key: File Name, value: List of Chunk Objects Corresponding to file
         self.chunkHandleToObj = {} # key: Chunk Handle, value: ChunkObject
+        self.chunkHandleToPrimary = {} # key: Chunk Handle, value: Primary ChunkServer ID
 
 
     def addChunk(self, chunkObj):
@@ -18,15 +19,42 @@ class MasterServer:
         self.fileToChunks[fileName].append(chunkObj)
         self.chunkHandleToObj[chunkObj.handle] = chunkObj
 
+        chunkServers = self.getChunkServers()
+        chunkObj.chunk_server_ip = [server.ip for server in chunkServers]
+        chunkObj.chunk_server_port = [server.port for server in chunkServers]
+
+        self.chunkHandle[chunkObj.handle] = [server.id for server in chunkServers]
+        # Deciding Primary Server
+        self.chunkHandleToPrimary[chunkObj.handle] = self.DecidePrimaryServer(chunkServers)
+        # Updating Replica Count
+        chunkObj.replica_count = len(chunkServers)
+        # TODO: Update the Useful space in Chunk Object
+
 
     def getChunk(self, fileName, chunkIndex):
         chunkList = self.fileToChunks[fileName]
         return chunkList[chunkIndex]
     
     
-    #Methods for Chunk Servers    
+    #Methods for Chunk Servers  
+
+    def getChunkServers(self):
+        chunkServerLis = []
+        for chunkServer in self.chunk_servers.values():
+            # TODO: Change this to select 3 most available chunk servers 
+            if chunkServer.isAlive:
+                chunkServerLis.append(chunkServer)
+            if(len(chunkServerLis)==3):
+                break
+        
+        return chunkServerLis
+
+
+
     def addChunkServer(self, chunk_server):
-       self.chunk_servers[chunk_server.id] = chunk_server
+        self.chunk_servers[chunk_server.id] = chunk_server
+        self.isServerAlive[chunk_server.id] = True
+        self.ServerCapacity[chunk_server.id] = chunk_server.diskAvail
 
     def getCSList(self):
         return list(server.__dict__() for server in self.chunk_servers.values())
@@ -65,18 +93,18 @@ class MasterServer:
     #         offset -= chunk_obj.usefulSpace
     #     return -1
     
-    # def DecidePrimaryServer(self, chunkServerIDs):
-    #     # Decide which chunk server to be primary
-    #     # Return the chunk server ID
-    #     spaceAvailable = 0
-    #     primaryID = 0
-    #     for id in chunkServerIDs:
-    #         id = str(id)
-    #         if id in self.isServerAlive and self.isServerAlive[id]:
-    #             if id in self.ServerCapacity and self.ServerCapacity[id] > spaceAvailable:
-    #                 spaceAvailable = self.ServerCapacity[id]
-    #                 primaryID = id
-    #     return primaryID
+    def DecidePrimaryServer(self, chunkServerLis):
+        chunkServerIDs = [server.id for server in chunkServerLis]
+        spaceAvailable = -1
+        primaryID = -1
+        for id in chunkServerIDs:
+            id = str(id)
+            if id in self.isServerAlive and self.isServerAlive[id]:
+                if id in self.ServerCapacity and self.ServerCapacity[id] > spaceAvailable:
+                    spaceAvailable = self.ServerCapacity[id]
+                    primaryID = id
+            
+        return primaryID
                 
 
     # def getChunkServerID(self, chunkHandle):
@@ -110,7 +138,17 @@ class MasterServer:
     #     print("Added Chunks = ", self.fileToChunks)
 
 
-    # # Methods for Operations
+    # # Methods for Chunk
+
+    def getPrimaryServer(self, chunkHandle):
+        if(chunkHandle not in self.chunkHandleToPrimary):
+            return -1
+        return self.chunkHandleToPrimary[chunkHandle]
+
+
+
+    # Method for Operations 
+
 
     # def write(self, chunkHandle, byteStart, byteEnd, chunkServerInfo):
 

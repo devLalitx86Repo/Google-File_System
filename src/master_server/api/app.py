@@ -43,11 +43,16 @@ def query_chunk_action():
     payload = request.get_json()
     filename = payload.get("file_name")
     chunk_index = payload.get("chunk_idx")
-        
+    
+    # Check if Chunk has already been created  ---- TODO
+
     if request.method == "GET":
         try:
-            chunk = master_server.getChunk(filename,chunk_index)
-            return jsonify({"chunk_handle": chunk.__dict__()}), 200
+            chunk = master_server.getChunk(filename,int(chunk_index))
+            primary_server = master_server.getPrimaryServer(chunk.handle)
+            chunkInfo = chunk.__dict__()
+            chunkInfo["primary_server"] = primary_server
+            return jsonify({"chunk_handle": chunkInfo}), 200  
         except Exception as e:
             return jsonify({"error": str(e)}), 400
         
@@ -57,7 +62,12 @@ def query_chunk_action():
             chunk_handle = generate_uuid()
             chunk = Chunk(filename,chunk_checksum,chunk_index,chunk_handle)
             master_server.addChunk(chunk)
-            return jsonify({"chunk_handle": chunk_handle}), 200
+            
+            primary_server = master_server.getPrimaryServer(chunk.handle)
+            chunkInfo = chunk.__dict__()
+            chunkInfo["primary_server"] = primary_server
+
+            return jsonify({"chunk_handle": chunkInfo}), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 400
 
