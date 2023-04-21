@@ -1,5 +1,11 @@
 import time
 from utils.constants import LEASE_TIME
+
+#local imports
+from .Chunk import Chunk
+from .Chunk_Server import Chunk_Server
+from utils.gen import generate_uuid
+
 class MasterServer:
     def __init__(self):
         self.name = "MasterServer"
@@ -13,25 +19,34 @@ class MasterServer:
         self.chunkHandleToObj = {} # key: Chunk Handle, value: ChunkObject
         self.chunkHandleToPrimary = {} # key: Chunk Handle, value: [Primary ChunkServer ID, Start Time]
 
+    
+    def chunk_avail(self,file_name,index):
+        if file_name in self.fileToChunks and len(self.fileToChunks[file_name]) > index:
+            return True
+        return False
+            
 
-    def addChunk(self, chunkObj):
-        fileName = chunkObj.fileName
-        if(fileName not in self.fileToChunks):
-            self.fileToChunks[fileName] = []
-        self.fileToChunks[fileName].append(chunkObj)
-        self.chunkHandleToObj[chunkObj.handle] = chunkObj
+    def addChunk(self, file_name, index,checksum):        
+        handle = generate_uuid()
+        chunk = Chunk(file_name,checksum,index,handle)
 
-        chunkServers = self.getChunkServers()
-        chunkObj.chunk_server_ip = [server.ip for server in chunkServers]
-        chunkObj.chunk_server_port = [server.port for server in chunkServers]
+        if file_name not in self.fileToChunks:
+            self.fileToChunks[file_name] = []
+        
+        self.fileToChunks[file_name].append(chunk)
+        self.chunkHandleToObj[handle] = chunk
 
-        self.chunkHandle[chunkObj.handle] = [server.id for server in chunkServers]
-        # Deciding Primary Server
-        self.chunkHandleToPrimary[chunkObj.handle] = [self.DecidePrimaryServer(chunkServers), time.time()+LEASE_TIME]
-        # Updating Replica Count
-        chunkObj.replica_count = len(chunkServers)
+        # chunkServers = self.getChunkServers()
+        # chunkObj.chunk_server_ip = [server.ip for server in chunkServers]
+        # chunkObj.chunk_server_port = [server.port for server in chunkServers]
+
+        # self.chunkHandle[chunkObj.handle] = [server.id for server in chunkServers]
+        # # Deciding Primary Server
+        # self.chunkHandleToPrimary[chunkObj.handle] = [self.DecidePrimaryServer(chunkServers), time.time()+LEASE_TIME]
+        # # Updating Replica Count
+        # chunkObj.replica_count = len(chunkServers)
         # TODO: Update the Useful space in Chunk Object
-
+        return True, chunk.__dict__()
 
     def getChunk(self, fileName, chunkIndex):
         chunkList = self.fileToChunks[fileName]
@@ -47,16 +62,24 @@ class MasterServer:
             if chunkServer.isAlive:
                 chunkServerLis.append(chunkServer)
             if(len(chunkServerLis)==3):
-                break
-        
+                break   
         return chunkServerLis
 
+    def addChunkServer(self, payload: dict):
+        try:
+            id = payload.get("chunkServerId")
+            ip = payload.get("ipAdress")
+            port = payload.get("port")
+            loc = payload.get("chunkLocationId")
+            diskAvail = payload.get("diskAvail")
+            chunk_server = Chunk_Server(ip,port,id, diskAvail, loc)  
 
-
-    def addChunkServer(self, chunk_server):
-        self.chunk_servers[chunk_server.id] = chunk_server
-        self.isServerAlive[chunk_server.id] = True
-        self.ServerCapacity[chunk_server.id] = chunk_server.diskAvail
+            self.chunk_servers[chunk_server.id] = chunk_server
+            self.isServerAlive[chunk_server.id] = True
+            self.ServerCapacity[chunk_server.id] = chunk_server.diskAvail
+            return True, "OK"
+        except Exception as e:
+            raise e
 
     def getCSList(self):
         return list(server.__dict__() for server in self.chunk_servers.values())

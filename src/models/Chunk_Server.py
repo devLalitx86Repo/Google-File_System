@@ -18,7 +18,7 @@ class Chunk_Server:
         self.last_ping = time.time()
         self.diskAvail = diskAvail
         self.loc = loc
-        self.chunkList = chunkList  # list of chunk handles 
+        self.chunkList = chunkList 
 
     def getInitInfo(self):
         return {
