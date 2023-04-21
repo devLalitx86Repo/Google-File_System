@@ -22,8 +22,9 @@ class Chunk:
             "chunk_server_ip": self.chunk_server_ip,
             "chunk_server_port": self.chunk_server_port,
             "usefulSpace": self.usefulSpace,
-            "expiryTime": self.expiryTime
+            "expiryTime": self.expiryTime,
         }
+
 
     def __str__(self):
         return json.dumps(self.__dict__())
