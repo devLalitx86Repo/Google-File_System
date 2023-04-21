@@ -2,6 +2,7 @@ import sys
 import os
 from dotenv import load_dotenv
 import random
+from utils.loc_manager import Location_Manager
 
 load_dotenv()
 
@@ -11,7 +12,7 @@ PORT = int(sys.argv[1])
 RAM_AVAIL_GB = int(os.getenv('ram_avail_gb'))
 DISK_AVAIL_GB = int(os.getenv('disk_avail_gb'))
 CHUNK_SERVER_ID = f'CS_{PORT}'
-CHUNK_SERVER_LOCATION_ID = random.randint(1, 10)
+CHUNK_SERVER_LOCATION_ID = Location_Manager().get_location()
 if len(sys.argv) > 2:
     CHUNK_LOCATION = os.path.join(os.getenv('chunk_location'), sys.argv[2])
 else:
