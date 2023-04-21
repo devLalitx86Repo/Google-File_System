@@ -1,5 +1,6 @@
 from flask import Flask, Response, jsonify, request
 # from pymongo import MongoClient
+import time
 import json
 import uuid
 
@@ -38,33 +39,34 @@ def get_random_id():
     id = uuid.uuid1().int>>64
     return jsonify({"id": str(id)})
 
-@app.route("/query_chunk", methods=["GET","POST","UPDATE"])
+@app.route("/query_chunk", methods=["POST","UPDATE"])
 def query_chunk_action():
     payload = request.get_json()
     filename = payload.get("file_name")
     chunk_index = payload.get("chunk_idx")
     
-    # Check if Chunk has already been created  ---- TODO
-
-    if request.method == "GET":
+    #  TODO Send the time if +ve time remaining else get a new primary and send it: 
+    if(filename in master_server.fileToChunks and int(chunk_index) in master_server.fileToChunks[filename]):
         try:
             chunk = master_server.getChunk(filename,int(chunk_index))
-            primary_server = master_server.getPrimaryServer(chunk.handle)
+            primary_server, avail_time = master_server.getPrimaryServer(chunk.handle)
             chunkInfo = chunk.__dict__()
+            chunkInfo["expiryTime"] = avail_time
             chunkInfo["primary_server"] = primary_server
             return jsonify({"chunk_handle": chunkInfo}), 200  
         except Exception as e:
             return jsonify({"error": str(e)}), 400
         
-    elif request.method == "POST":
+    else:
         try:
             chunk_checksum = payload.get("checksum")
             chunk_handle = generate_uuid()
             chunk = Chunk(filename,chunk_checksum,chunk_index,chunk_handle)
             master_server.addChunk(chunk)
             
-            primary_server = master_server.getPrimaryServer(chunk.handle)
+            primary_server, avail_time = master_server.getPrimaryServer(chunk.handle)
             chunkInfo = chunk.__dict__()
+            chunkInfo["expiryTime"] = avail_time
             chunkInfo["primary_server"] = primary_server
 
             return jsonify({"chunk_handle": chunkInfo}), 200

@@ -1,3 +1,5 @@
+import time
+from utils.constants import LEASE_TIME
 class MasterServer:
     def __init__(self):
         self.name = "MasterServer"
@@ -9,7 +11,7 @@ class MasterServer:
         self.ServerCapacity = {} # key: ChunkServer ID, value: Capacity i.e. available space
         self.fileToChunks = {} # key: File Name, value: List of Chunk Objects Corresponding to file
         self.chunkHandleToObj = {} # key: Chunk Handle, value: ChunkObject
-        self.chunkHandleToPrimary = {} # key: Chunk Handle, value: Primary ChunkServer ID
+        self.chunkHandleToPrimary = {} # key: Chunk Handle, value: [Primary ChunkServer ID, Start Time]
 
 
     def addChunk(self, chunkObj):
@@ -25,7 +27,7 @@ class MasterServer:
 
         self.chunkHandle[chunkObj.handle] = [server.id for server in chunkServers]
         # Deciding Primary Server
-        self.chunkHandleToPrimary[chunkObj.handle] = self.DecidePrimaryServer(chunkServers)
+        self.chunkHandleToPrimary[chunkObj.handle] = [self.DecidePrimaryServer(chunkServers), time.time()+LEASE_TIME]
         # Updating Replica Count
         chunkObj.replica_count = len(chunkServers)
         # TODO: Update the Useful space in Chunk Object
@@ -141,9 +143,15 @@ class MasterServer:
     # # Methods for Chunk
 
     def getPrimaryServer(self, chunkHandle):
+        requestTime = time.time()
         if(chunkHandle not in self.chunkHandleToPrimary):
             return -1
-        return self.chunkHandleToPrimary[chunkHandle]
+        time_gap = requestTime - self.chunkHandleToPrimary[chunkHandle][1]
+        if(time_gap > LEASE_TIME):
+            chunkServers = self.getChunkServers()
+            self.chunkHandleToPrimary[chunkHandle] = [self.DecidePrimaryServer(chunkServers), time.time()+LEASE_TIME]
+        
+        return self.chunkHandleToPrimary[chunkHandle][0], self.chunkHandleToPrimary[chunkHandle][1]
 
 
 
