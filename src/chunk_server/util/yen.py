@@ -49,6 +49,7 @@ class Heartbeat(threading.Thread):
         data = chunk_server.getPingInfo()
         all_chunks = list(list_of_chunks.values())
         data['chunkInfo'] = [obj.getChunkInfo() for obj in all_chunks]
+        data['diskAvail'] -= len(all_chunks)
         del all_chunks
         return data
 
