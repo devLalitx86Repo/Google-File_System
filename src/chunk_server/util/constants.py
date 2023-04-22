@@ -14,10 +14,17 @@ DISK_AVAIL_GB = 20
 # DISK_AVAIL_GB = int(os.getenv('disk_avail_gb'))
 CHUNK_SERVER_ID = f'CS_{PORT}'
 CHUNK_SERVER_LOCATION_ID = Location_Manager().get_location()
-if len(sys.argv) > 2:
-    CHUNK_LOCATION = os.path.join(os.getenv('chunk_location'), sys.argv[2])
-else:
+try:
+    CHUNK_LOCATION = os.path.join(os.getenv('chunk_location'), CHUNK_SERVER_ID)
+    if not os.path.exists(CHUNK_LOCATION):
+        os.makedirs(CHUNK_LOCATION)
+except Exception as e:
+    print('error while creating chunk directory', e)
     CHUNK_LOCATION = os.getenv('chunk_location')
+# if len(sys.argv) > 2:
+#     CHUNK_LOCATION = os.path.join(os.getenv('chunk_location'), sys.argv[2])
+# else:
+#     CHUNK_LOCATION = os.getenv('chunk_location')
 POST = ['POST']
 GET = ['GET']
 DELETE = ['DELETE']
