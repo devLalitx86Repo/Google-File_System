@@ -7,7 +7,7 @@ import time
 
 
 class Chunk_Server:
-    def __init__(self, ip, port, id=None, diskAvail=0,loc = 0, chunkList=[]):
+    def __init__(self, ip, port, id=None, diskAvail=0, loc = (0,0), chunkList=[]):
         self.id = id
         # if id == None:
         #     self.id = generate_uuid()
