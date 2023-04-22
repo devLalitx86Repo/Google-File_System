@@ -1,11 +1,11 @@
 import requests
 
 def get(url: str):
-    response = requests.get(url)
+    response = requests.get(url, timeout=(3.05, 27))
     return response
 
 def post(url: str, data: dict):
-    response = requests.post(url, json=data)
+    response = requests.post(url, json=data, timeout=(3.05, 27))
     return response
 
 def get_dict(url: str):
