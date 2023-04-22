@@ -5,9 +5,8 @@ import time
 # local imports
 # from utils.gen import generate_uuid
 
-
 class Chunk_Server:
-    def __init__(self, ip, port, id=None, diskAvail=0,loc = 0, chunkList=[]):
+    def __init__(self, ip, port, id=None, diskAvail=0, loc = (0,0), chunkList=[]):
         self.id = id
         # if id == None:
         #     self.id = generate_uuid()
@@ -18,7 +17,7 @@ class Chunk_Server:
         self.last_ping = time.time()
         self.diskAvail = diskAvail
         self.loc = loc
-        self.chunkList = chunkList  # list of chunk handles 
+        self.chunkList = chunkList 
 
     def getInitInfo(self):
         return {
@@ -38,6 +37,8 @@ class Chunk_Server:
             # "chunkInfo" : self.availableChunks
         }
 
+    def get_url(self):
+        return "http://{}:{}".format(self.ip, self.port)    
 
     # def start(self):
     #     for master in self.masters:
@@ -86,8 +87,17 @@ class Chunk_Server:
     
     def update_diskAvail(self, diskAvail):
         self.diskAvail = diskAvail
-        
+    
+    def add_chunk(self,chunk):
+        self.chunkList.append(chunk)
 
     def __dict__(self):
-        return {"id": self.id, "ip": self.ip, "port": self.port, "isAlive": self.isAlive, "last_ping": self.last_ping, "Avail Space":self.diskAvail}
+        return {"id": self.id, 
+                "ip": self.ip, 
+                "port": self.port, 
+                "isAlive": self.isAlive, 
+                "last_ping": self.last_ping, 
+                "Avail Space":self.diskAvail,
+                "Location":self.loc,
+                "chunkList":self.chunkList}
 

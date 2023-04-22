@@ -6,7 +6,7 @@ RUN pip install -U pip && pip install -r requirements/common.txt
 COPY ./master_server/api /app/api
 COPY ./master_server/bin /app/bin
 COPY ./models /app/models
-COPY ./logging /app/logging
+# COPY ./logging /app/logging
 COPY ./utils /app/utils
 COPY ./master_server/wsgi.py /app/wsgi.py
 COPY ./master_server/config /app/config
@@ -16,4 +16,4 @@ EXPOSE 5000
 
 # ENTRYPOINT ["bash", "/app/bin/run.sh"]
 #run without gunicorn
-ENTRYPOINT ["python", "/app/wsgi.py"]
+ENTRYPOINT ["python", "-u","/app/wsgi.py"]
