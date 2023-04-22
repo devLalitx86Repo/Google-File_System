@@ -3,6 +3,7 @@ from flask import Flask, Response, jsonify, request
 import time
 import json
 import uuid
+from flask_cors import CORS, cross_origin
 
 #Local imports
 from .errors import errors, Crash_Routine
@@ -14,6 +15,7 @@ from utils.log import logFun
 
 app = Flask(__name__)
 app.register_blueprint(errors)
+cors = CORS(app)
 
 master_server = MasterServer()
 Crash_Routine(master_server)
@@ -40,6 +42,7 @@ def get_random_id():
     return jsonify({"id": str(id)})
 
 @app.route("/query_chunk", methods=["POST"])
+@cross_origin()
 def query_chunk_action():
     payload = request.get_json()
     filename = payload.get("file_name")
@@ -48,14 +51,13 @@ def query_chunk_action():
     #  TODO Send the time if +ve time remaining else get a new primary and send it: 
     if master_server.chunk_avail(filename,chunk_index):
         try:
-            chunk = master_server.getChunk(filename,int(chunk_index))
-            primary_server, avail_time = master_server.getPrimaryServer(chunk.handle)
-            chunkInfo = chunk.__dict__()
-            chunkInfo["expiryTime"] = avail_time
-            chunkInfo["primary_server"] = primary_server
-            return jsonify({"chunk_handle": chunkInfo}), 200  
+            status = master_server.getChunkInfo(filename,chunk_index)
+            if status[0]:
+                return json.dumps(status[1]), 200
+            else:
+                return jsonify({"error": status[1]}), 400
         except Exception as e:
-            return jsonify({"error": str(e)}), 400        
+            return jsonify({"error": str(e)}), 400 
     else:
         try:
             checksum = payload.get("checksum")
@@ -90,9 +92,7 @@ def ping():
     try:
         master_server.update_ts(id,timestamp)
         master_server.update_diskAvail(id,diskAvail)
-        status = master_server.update_chunkInfo(id,chunkInfo_lis)
-        if status == "ERROR":
-            return jsonify({"Error": "Bad Request ChunkInfo Mismatched"}), 400
+        master_server.update_chunkInfo(id,chunkInfo_lis)
         return jsonify({"message": "OK"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400

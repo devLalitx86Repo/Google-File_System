@@ -6,11 +6,11 @@ class Chunk:
         self.chunkIndex = chunkIndex
         self.handle = handle
         self.checkSum = checkSum
-        self.replica_count = 0
+        self.replica_count = 3
         self.chunk_server_ip = []
         self.chunk_server_port = []
-        self.usefulSpace = 0
-        self.expiryTime = 0
+        self.usefulSpace = 64
+        self.expiryTime = 60
 
     def __dict__(self):
         return {

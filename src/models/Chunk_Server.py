@@ -86,8 +86,16 @@ class Chunk_Server:
     
     def update_diskAvail(self, diskAvail):
         self.diskAvail = diskAvail
-        
+    
+    def add_chunk(self,chunk):
+        self.chunkList.append(chunk)
 
     def __dict__(self):
-        return {"id": self.id, "ip": self.ip, "port": self.port, "isAlive": self.isAlive, "last_ping": self.last_ping, "Avail Space":self.diskAvail}
+        return {"id": self.id, 
+                "ip": self.ip, 
+                "port": self.port, 
+                "isAlive": self.isAlive, 
+                "last_ping": self.last_ping, 
+                "Avail Space":self.diskAvail,
+                "chunkList":self.chunkList}
 
