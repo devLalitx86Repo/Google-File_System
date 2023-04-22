@@ -8,8 +8,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.api_request import post_dict, get_dict
 from utils.gen import make_url
 
-MASTER_URL = ""
+MASTER_URL = "http://192.168.78.190:5000"
 files = dict()
+
+CHUNK_SIZE = 64
+DATA_SIZE = CHUNK_SIZE // 4
 
 class File:
     def __init__(self, file_name) -> None:
@@ -31,6 +34,8 @@ class File:
                 chunk = Chunk(response) # response == chunk_metadata
                 self.chunks[chunk_idx] = chunk
                 self.last_chunk_id = max(self.last_chunk_id, chunk_idx)
+            else:
+                print("Error: ", response)
         else:
             chunk = self.chunks[chunk_idx] # key error
         print("~File::request_md")
@@ -39,7 +44,7 @@ class File:
     def read_chunk(self, chunk_idx : int, byte_start : int, byte_count : int):
         print("File::read_chunk")
         chunk = self.request_md(chunk_idx)
-        print("Chunk Type:", type(chunk))
+        # print("Chunk Type:", type(chunk))
         response, status_code = chunk.read(byte_start, byte_count)
         print("~File::read_chunk")
         return response, status_code
@@ -77,12 +82,13 @@ class Chunk:
             self.checksum = chunk_md["checkSum"]
             self.handle = chunk_md["handle"]
             self.chunk_server_info = list()
+
             # sort chunk_servers wrt client's location
             for chi in range(self.replica_count):
                 chunk_server_i = {
                     "ipAddress":chunk_md["chunk_server_ip"][chi],
                     "port":chunk_md["chunk_server_port"][chi],
-                    "chunkServerId":"xxx",
+                    "chunkServerId": chunk_md["server_ids"][chi],
                 }
                 self.chunk_server_info.append(chunk_server_i)
         except Exception as e:
@@ -126,6 +132,7 @@ class Chunk:
         
         
     def write(self, data, byteStart : int, byteEnd : int):
+        print("Chunk::write")
         chunk_server_url = make_url(self.chunk_server_info[self.primary_server]["ipAddress"],self.chunk_server_info[self.primary_server]["port"])
         body = {
             "chunkServerInfo" : self.chunk_server_info,
@@ -137,7 +144,10 @@ class Chunk:
             "data" : data,
         }
         print("Write request sent to:", chunk_server_url)
-        return post_dict(chunk_server_url + "/write/", body)
+        response, status_code = post_dict(chunk_server_url + "/write/", body)
+        print("status_code = ", status_code)
+        print("~Chunk::write")
+        return response, status_code
 
 def read_handler(file_name : str, chunk_idx : int, byte_start : int, byte_count : int):
     if file_name not in files:
@@ -208,6 +218,34 @@ def recover_file_handler(file_name : str):
         files[file_name] = new_file
     print("Create initiated")
     files[file_name].create_new_chunk()
+
+def large_file_append_handler(file_name : str, local_file_name : str):
+    if file_name not in files:
+        new_file = File(file_name)
+        files[file_name] = new_file
+    with open(local_file_name, "r") as f:
+        chunk_number = 0
+        while True:
+            file_data = f.read(DATA_SIZE)
+            if file_data == "":
+                break
+            print("Appending chunk#:", chunk_number)
+            for attepmts in range(3):
+                print("Attempt#: ", attepmts)
+                response, status_code = files[file_name].append_chunk(file_data)
+                if status_code == 200:
+                    print("Response:", response)
+                    break
+                else:
+                    print("Error appending data: \n", response)
+                    files[file_name].create_new_chunk()
+                    print("waiting for 5 seconds...")
+                    time.sleep(5)
+            # print("Cannot append, try again later.")
+            chunk_number += 1
+            
+            
+    
 
 if __name__ == "__main__":
     while True:
