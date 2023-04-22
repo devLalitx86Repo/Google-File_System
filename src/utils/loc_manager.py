@@ -18,5 +18,5 @@ class Location_Manager():
         #return euclidean distance
         return ((loc1[0] - loc2[0])**2 + (loc1[1] - loc2[1])**2)**0.5
 
-loc_man = Location_Manager()
-print(loc_man.get_location())
+# loc_man = Location_Manager()
+# print(loc_man.get_location())

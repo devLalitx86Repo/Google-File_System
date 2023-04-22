@@ -5,7 +5,6 @@ import time
 # local imports
 # from utils.gen import generate_uuid
 
-
 class Chunk_Server:
     def __init__(self, ip, port, id=None, diskAvail=0, loc = (0,0), chunkList=[]):
         self.id = id
@@ -38,6 +37,8 @@ class Chunk_Server:
             # "chunkInfo" : self.availableChunks
         }
 
+    def get_url(self):
+        return "http://{}:{}".format(self.ip, self.port)    
 
     # def start(self):
     #     for master in self.masters:
@@ -97,5 +98,6 @@ class Chunk_Server:
                 "isAlive": self.isAlive, 
                 "last_ping": self.last_ping, 
                 "Avail Space":self.diskAvail,
+                "Location":self.loc,
                 "chunkList":self.chunkList}
 

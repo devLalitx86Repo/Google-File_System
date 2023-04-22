@@ -16,4 +16,4 @@ EXPOSE 5000
 
 # ENTRYPOINT ["bash", "/app/bin/run.sh"]
 #run without gunicorn
-ENTRYPOINT ["python", "/app/wsgi.py"]
+ENTRYPOINT ["python", "-u","/app/wsgi.py"]
