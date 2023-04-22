@@ -19,74 +19,97 @@ class File:
         self.last_chunk_id = -1
     
     def request_md(self, chunk_idx : int):
-        if chunk_idx not in self.chunks or chunk.exp_time < time.time():
+        print("File::request_md")
+        chunk = None
+        if chunk_idx not in self.chunks or self.chunks[chunk_idx].exp_time < time.time():
             # request Master: (file_name, chunk_idx) --> chunk_md
-            body = {"file_name":file_name, "chunk_idx":chunk_idx}
+            body = {"file_name":file_name, "chunk_idx":chunk_idx, "checksum":"000"}
             print("requesting metadata")
-            response, status_code = post_dict(MASTER_URL + "/query_chunk", body)
+            response, status_code = post_dict(MASTER_URL + "/read_chunk", body)
+            print("response code = ", status_code)
             if status_code == 200:
                 chunk = Chunk(response) # response == chunk_metadata
                 self.chunks[chunk_idx] = chunk
                 self.last_chunk_id = max(self.last_chunk_id, chunk_idx)
         else:
             chunk = self.chunks[chunk_idx] # key error
-        print("done")
+        print("~File::request_md")
         return chunk
     
-    def read_chunk(self, chunk_idx : int):
+    def read_chunk(self, chunk_idx : int, byte_start : int, byte_count : int):
+        print("File::read_chunk")
         chunk = self.request_md(chunk_idx)
-        return chunk.read()
+        print("Chunk Type:", type(chunk))
+        response, status_code = chunk.read(byte_start, byte_count)
+        print("~File::read_chunk")
+        return response, status_code
     
     def append_chunk(self, data):
+        print("File::append_chunk")
         chunk = self.request_md(-1) # -1 denotes last chunk
-        return chunk.append(data)
+        response, status_code = chunk.append(data)
+        print("~File::append_chunk")
+        return response, status_code
     
     def write_chunk(self, chunk_idx : int, byte_start : int, byte_end : int, data):
         chunk = self.request_md(chunk_idx)
-        return chunk.write(data, byte_start, byte_end)
+        response, status_code = chunk.write(data, byte_start, byte_end)
+        return response, status_code
 
     def create_new_chunk(self):
+        print("File::create_new_chunk")
         body = {"file_name":file_name, "chunk_idx":self.last_chunk_id + 1, "checksum":"000"}
-        print("requesting new chunk")
         response, status_code = post_dict(MASTER_URL + "/query_chunk", body)
         if status_code == 200:
             print(response)
+        print("~File::create_new_chunk")
             
 class Chunk:
     def __init__(self, chunk_md) -> None:
-        self.md = chunk_md
-        self.replica_count = int(chunk_md["replica_count"])
-        self.primary_server = int(chunk_md["primaryServer"])
-        self.chunk_idx = int(chunk_md["chunkIndex"])
-        self.exp_time = chunk_md["expiryTime"]
-        self.file_name = chunk_md["fileName"]
-        self.checksum = chunk_md["checksum"]
-        self.handle = chunk_md["handle"]
-        self.chunk_server_info = list() # dict
-        # sort chunk_servers wrt client's location
-        for chi in range(self.replica_count):
-            chunk_server_i = {
-                "ipAddress":chunk_md["chunk_server_ip"][chi],
-                "port":chunk_md["chunk_server_port"][chi],
-                "chunkServerId":"xxx",
-            }
-            self.chunk_servers.append(chunk_server_i)
+        print("Chunk")
+        try:
+            self.md = chunk_md
+            self.replica_count = int(chunk_md["replica_count"])
+            self.primary_server = int(chunk_md["primary_server"])
+            self.chunk_idx = int(chunk_md["chunkIndex"])
+            self.exp_time = chunk_md["expiryTime"]
+            self.file_name = chunk_md["fileName"]
+            self.checksum = chunk_md["checkSum"]
+            self.handle = chunk_md["handle"]
+            self.chunk_server_info = list()
+            # sort chunk_servers wrt client's location
+            for chi in range(self.replica_count):
+                chunk_server_i = {
+                    "ipAddress":chunk_md["chunk_server_ip"][chi],
+                    "port":chunk_md["chunk_server_port"][chi],
+                    "chunkServerId":"xxx",
+                }
+                self.chunk_server_info.append(chunk_server_i)
+        except Exception as e:
+        	print(e)
+        print("~Chunk")
     
-    def read(self, byte_range : tuple):
+    def read(self, byte_start: int, byte_count : int):
+        print("Chunk::read")
         for chs_i in range(self.md["replica_count"]):
             # request chunk_server: (chunk_handle, byte_range) --> (status, data, check_sum)
             chunk_server_url = make_url(self.md["chunk_server_ip"][chs_i], self.md["chunk_server_port"][chs_i])
             body = {
                 "chunkHandle" : self.md["handle"],
-                "byteOffset " : byte_range[0],
-                "totalBytes" : byte_range[1],
+                "byteOffset " : byte_start,
+                "totalBytes" : byte_count,
             }
             print("Read request sent to:", chunk_server_url)
-            return post_dict(chunk_server_url + "/read/", body)
+            response, status_code = post_dict(chunk_server_url + "/read/", body)
+            print("status_code = ", status_code)
+            print("~Chunk::read")
+            return response, status_code
+        print("~Chunk::read")
     
     def append(self, data):
         # request primary: (chunk_handle, data) --> (status)
-        chunk_server_url = make_url(self.chunk_servers[self.primary_server]["ip"],self.chunk_servers[self.primary_server]["port"])
+        print("Chunk::append")
+        chunk_server_url = make_url(self.chunk_server_info[self.primary_server]["ipAddress"],self.chunk_server_info[self.primary_server]["port"])
         body = {
             "chunkServerInfo" : self.chunk_server_info,
             "chunkHandle" : self.handle,
@@ -95,10 +118,15 @@ class Chunk:
             "data" : data,
         }
         print("Append request sent to:", chunk_server_url)
-        return post_dict(chunk_server_url + "/append/", body)
-    
+        print("body: \n", body)
+        response, status_code =  post_dict(chunk_server_url + "/append", body)
+        print("status_code = ", status_code)
+        print("~Chunk::append")
+        return response, status_code
+        
+        
     def write(self, data, byteStart : int, byteEnd : int):
-        chunk_server_url = make_url(self.chunk_servers[self.primary_server]["ip"],self.chunk_servers[self.primary_server]["port"])
+        chunk_server_url = make_url(self.chunk_server_info[self.primary_server]["ipAddress"],self.chunk_server_info[self.primary_server]["port"])
         body = {
             "chunkServerInfo" : self.chunk_server_info,
             "chunkHandle" : self.handle,
@@ -111,20 +139,21 @@ class Chunk:
         print("Write request sent to:", chunk_server_url)
         return post_dict(chunk_server_url + "/write/", body)
 
-def read_handler(file_name : str, chunk_idx : int):
+def read_handler(file_name : str, chunk_idx : int, byte_start : int, byte_count : int):
     if file_name not in files:
         new_file = File(file_name)
         files[file_name] = new_file
     print("Read initiated")
-    response, status_code = files[file_name].read_chunk(chunk_idx)
+    response, status_code = files[file_name].read_chunk(chunk_idx, byte_start, byte_count)
+    print("status_code = ", status_code)
     if status_code == 200:
-        print(response)
+        print("Response:", response)
     else:
         print("Error reading chunk: \n", response)
 
 def append_handler(file_name : str, file_path : str):
-    with open(file_path, "rb") as f:
-        file_data = f.read()
+    with open(file_path, "r") as f:
+        file_data = f.read()        
     if file_name not in files:
         new_file = File(file_name)
         files[file_name] = new_file
@@ -133,7 +162,7 @@ def append_handler(file_name : str, file_path : str):
         print("Attempt#: ", attepmts)
         response, status_code = files[file_name].append_chunk(file_data)
         if status_code == 200:
-            print(response)
+            print("Response:", response)
             return
         else:
             print("Error appending data: \n", response)
@@ -143,7 +172,7 @@ def append_handler(file_name : str, file_path : str):
     print("Cannot append, try again later.")
 
 def write_handler(file_name : str, chunk_idx : int, byte_start : int, byte_end : int, file_path : str):
-    with open(file_path, "rb") as f:
+    with open(file_path, "r") as f:
         file_data = f.read()
     if file_name not in files:
         new_file = File(file_name)
@@ -153,7 +182,7 @@ def write_handler(file_name : str, chunk_idx : int, byte_start : int, byte_end :
         print("Attempt#: ", attepmts)
         response, status_code = files[file_name].write_chunk(chunk_idx, byte_start, byte_end, file_data)
         if status_code == 200:
-            print(response)
+            print("Response:", response)
             return
         else:
             print("Error writing data: \n", response)
@@ -166,14 +195,30 @@ def create_file_handler(file_name : str):
     print("Create initiated")
     files[file_name].create_new_chunk()
 
+def delete_file_handler(file_name : str):
+    if file_name not in files:
+        new_file = File(file_name)
+        files[file_name] = new_file
+    print("Create initiated")
+    files[file_name].create_new_chunk()
+
+def recover_file_handler(file_name : str):
+    if file_name not in files:
+        new_file = File(file_name)
+        files[file_name] = new_file
+    print("Create initiated")
+    files[file_name].create_new_chunk()
+
 if __name__ == "__main__":
     while True:
         cmd = input().split()
         try:
-            if cmd[0] == "read": # read file_name chunk_idx
+            if cmd[0] == "read": # read file_name chunk_idx byte_start byte_count
                 file_name = cmd[1]
                 chunk_idx = int(cmd[2])
-                read_handler(file_name, chunk_idx)
+                byte_start = int(cmd[3])
+                byte_count = int(cmd[4])
+                read_handler(file_name, chunk_idx, byte_start, byte_count)
 
             elif cmd[0] == "write": # write file_name chunk_idx byte_start byte_end local_file_path
                 write_handler(cmd[1], int(cmd[2]), int(cmd[3]), int(cmd[4]), cmd[5])
@@ -200,4 +245,4 @@ if __name__ == "__main__":
                 break
 
         except Exception as e:
-            print("Invalid command")    
+            print("Invalid command: \n", e)    
